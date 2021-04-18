@@ -107,8 +107,12 @@ class Utility:
         True
         """
         words = text.split()
+
+        if len(words) < word_lowerlimit:
+            return True
+
         max_word_length = max([len(word) for word in words]) 
-        if (len(words) < word_lowerlimit) or (max_word_length < ch_lowerlimit) or (max_word_length >= word_upperlimit):
+        if (max_word_length < ch_lowerlimit) or (max_word_length >= word_upperlimit):
             return True
         else:
             return False
