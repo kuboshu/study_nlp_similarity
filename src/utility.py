@@ -2,12 +2,15 @@ import re
 import glob
 import os
 
+class UtilityError(Exception):
+    pass
+
 class Utility:
 
     @classmethod
     def get_pdflist(cls, dirpath, limit=0, recursive=False):
         """
-        指定されたディレクトリパス以下にあるpdf(拡張子が.pdf)を検索し、そのパスリストを返します。
+        指定されたディレクトリパス以下にあるpdf(拡張子が.pdf)を検索し、ソート済みのパスリストを返します。
         取得する最大のパス数をlimitで指定できます。limitに0を指定するとリミット数を無効化します。
         """
         search_pattern = os.path.join(os.path.abspath(dirpath), '*.pdf')
@@ -15,15 +18,16 @@ class Utility:
             search_pattern = os.path.join(os.path.abspath(dirpath), '**', '*.pdf')
         
         if limit == 0:
-            return glob.glob(search_pattern, recursive=recursive)
+            return sorted(glob.glob(search_pattern, recursive=recursive))
         elif limit > 0:
             path_list = []
-            for filepath in glob.iglob(search_pattern, recursive=recursive):
+            for filepath in sorted(glob.iglob(search_pattern, recursive=recursive)):
                 path_list.append(filepath)
                 if len(path_list) == limit:
                     break
+            return path_list
         else:
-            raise Exception(f'limit({limit})が不正 : 0以上の整数値を入れてください。')
+            raise UtilityError(f'limit({limit})が不正 : 0以上の整数値を入れてください。')
 
     @classmethod
     def combine_spaces(cls, sentence):
