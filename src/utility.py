@@ -86,44 +86,32 @@ class Utility:
 
 
     @classmethod
-    def is_invalid_text(cls, text, ch_threshold=5, word_threshold=3):
+    def is_invalid_text(cls, text, ch_lowerlimit=5, word_lowerlimit=3, word_upperlimit=20):
         """
-        textを構成する単語の最大文字列がch_threshold未満であるか、
-        もしくは、textを構成する単語数がword_threshold未満の場合Trueを返します。
+        textを構成する単語の最大文字列がch_lowerlimit未満であるか、
+        もしくは、textを構成する単語数がword_lowerlimit未満の場合Trueを返します。
+        また、word_upperlimit以上の文字数の単語が含まれる場合もTrueを返します。
+        * グラフ中の文字列は全て結合した状態で表示されることもあるため、極端に長い単語を含む場合は無効な文章とする。
 
         文章として意味のなさそうなものを削除する場合などに使用します。
 
         >>> Utility.is_invalid_text("aaa bbbbb cc")
         False
-        >>> Utility.is_invalid_text("aaa bbbbb cc", ch_threshold=6)
+        >>> Utility.is_invalid_text("aaa bbbbb cc", ch_lowerlimit=6)
         True
-        >>> Utility.is_invalid_text("aaa bbbbb cc", word_threshold=4)
+        >>> Utility.is_invalid_text("aaa bbbbb cc", word_lowerlimit=4)
         True
-        >>> Utility.is_invalid_text(" a b c d e f g h ", word_threshold=4)
+        >>> Utility.is_invalid_text(" a b c d e f g h ", word_lowerlimit=4)
+        True
+        >>> Utility.is_invalid_text("aaa bbbbbbbbbbbbbbbbbbbb cc")
         True
         """
         words = text.split()
-        if (len(words) < word_threshold) or (max([len(word) for word in words]) < ch_threshold):
+        max_word_length = max([len(word) for word in words]) 
+        if (len(words) < word_lowerlimit) or (max_word_length < ch_lowerlimit) or (max_word_length >= word_upperlimit):
             return True
         else:
             return False
-
-    @classmethod
-    def is_valid_text(cls, text, ch_threshold=5, word_threshold=3):
-        """
-        textを構成する単語の最大文字列がch_threshold以上であり、
-        かつ、textを構成する単語数がword_threshold以上の場合Trueを返します。
-
-        >>> Utility.is_valid_text("aaa bbbbb cc")
-        True
-        >>> Utility.is_valid_text("aaa bbbbb cc", ch_threshold=6)
-        False
-        >>> Utility.is_valid_text("aaa bbbbb cc", word_threshold=4)
-        False
-        >>> Utility.is_valid_text(" a b c d e f g h ", word_threshold=4)
-        False
-        """
-        return not Utility.is_invalid_text(text, ch_threshold=ch_threshold, word_threshold=word_threshold)
 
     #TODO: テスト方法に迷ったので、いったんテストはペンディング。後でテスト方法を検討する。
     @classmethod
