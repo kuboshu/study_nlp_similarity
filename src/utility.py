@@ -1,12 +1,18 @@
 import re
 import glob
 import os
+import io
+
+import pdfminer.converter
+import pdfminer.layout
+import pdfminer.pdfinterp
+import pdfminer.pdfpage
+import pdfminer.pdfparser
 
 class UtilityError(Exception):
     pass
 
 class Utility:
-
     @classmethod
     def get_pdflist(cls, dirpath, limit=0, recursive=False):
         """
@@ -77,6 +83,65 @@ class Utility:
         """
         extract_pattern = r'(?:\d((\,(?!\s+))|(\.(?!\s+)))?)+'
         return re.sub(extract_pattern, word, text)
+
+
+    @classmethod
+    def is_invalid_text(cls, text, ch_threshold=5, word_threshold=3):
+        """
+        textを構成する単語の最大文字列がch_threshold未満であるか、
+        もしくは、textを構成する単語数がword_threshold未満の場合Trueを返します。
+
+        文章として意味のなさそうなものを削除する場合などに使用します。
+
+        >>> Utility.is_invalid_text("aaa bbbbb cc")
+        False
+        >>> Utility.is_invalid_text("aaa bbbbb cc", ch_threshold=6)
+        True
+        >>> Utility.is_invalid_text("aaa bbbbb cc", word_threshold=4)
+        True
+        >>> Utility.is_invalid_text(" a b c d e f g h ", word_threshold=4)
+        True
+        """
+        words = text.split()
+        if (len(words) < word_threshold) or (max([len(word) for word in words]) < ch_threshold):
+            return True
+        else:
+            return False
+
+    @classmethod
+    def is_valid_text(cls, text, ch_threshold=5, word_threshold=3):
+        """
+        textを構成する単語の最大文字列がch_threshold以上であり、
+        かつ、textを構成する単語数がword_threshold以上の場合Trueを返します。
+
+        >>> Utility.is_valid_text("aaa bbbbb cc")
+        True
+        >>> Utility.is_valid_text("aaa bbbbb cc", ch_threshold=6)
+        False
+        >>> Utility.is_valid_text("aaa bbbbb cc", word_threshold=4)
+        False
+        >>> Utility.is_valid_text(" a b c d e f g h ", word_threshold=4)
+        False
+        """
+        return not Utility.is_invalid_text(text, ch_threshold=ch_threshold, word_threshold=word_threshold)
+
+    #TODO: テスト方法に迷ったので、いったんテストはペンディング。後でテスト方法を検討する。
+    @classmethod
+    def load_pdf_texts(cls, filepath, newline='\n'):
+        """
+        PDFからテキストデータを読み込み、改行コードで区切ったテキストのリストを返します。
+        改行コードはnewlineで指定できます。
+        """
+        output = io.StringIO()
+        with open(filepath, 'rb') as fin:
+            parser = pdfminer.pdfparser.PDFParser(fin)
+            doc = pdfminer.pdfdocument.PDFDocument(parser)
+            rsrcmgr = pdfminer.pdfinterp.PDFResourceManager()
+            device = pdfminer.converter.TextConverter(rsrcmgr, output,laparams=pdfminer.layout.LAParams())
+            interpreter = pdfminer.pdfinterp.PDFPageInterpreter(rsrcmgr, device)
+            for page in pdfminer.pdfpage.PDFPage.create_pages(doc):
+                interpreter.process_page(page)
+        return output.getvalue().split(newline)
 
 
 
