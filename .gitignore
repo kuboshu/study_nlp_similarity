@@ -1,2 +1,6 @@
 */__pycache__/*
 data/*
+*.DS_Store
+.Rproj.user
+*.pickle
+*.csv
